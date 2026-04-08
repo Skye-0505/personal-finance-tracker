@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Category = require('../models/Category');
+const defaultCategories = require('../seed/defaultCategories');
 
 const SALT_ROUNDS = 10;
 const ADMIN_USERNAME = '7270_root';
@@ -167,12 +169,56 @@ const createTransactionCollection = async () => {
   }
 };
 
+/**
+ * Initialize default categories for specified user
+ */
+const initializeAdminCategories = async (adminId) => {
+  try {
+    // Check if admin already has categories
+    const existingCategories = await Category.countDocuments({ user_id: adminId });
+
+    if (existingCategories > 0) {
+      console.log(`⏭️  Admin already has ${existingCategories} categories`);
+      return {
+        created: false,
+        alreadyExists: true,
+        count: existingCategories
+      };
+    }
+
+    // Create default categories for admin
+    const userCategories = defaultCategories.map(cat => ({
+      user_id: adminId,
+      name: cat.name,
+      type: cat.type,
+      icon: cat.icon,
+      color: cat.color,
+      isDefault: cat.isDefault,
+      created_at: new Date(),
+      updated_at: new Date()
+    }));
+
+    await Category.insertMany(userCategories);
+    console.log(`✅ Created ${userCategories.length} default categories for admin`);
+
+    return {
+      created: true,
+      count: userCategories.length
+    };
+  } catch (error) {
+    console.error('❌ Error initializing admin categories:', error);
+    throw error;
+  }
+};
+
 const initializeDatabase = async () => {
   const result = {
     usersCollectionCreated: false,
     transactionsCollectionCreated: false,
     adminCreated: false,
     adminInfo: null,
+    categoriesCreated: false,
+    categoriesCount: 0,
     message: ''
   };
   
@@ -202,9 +248,22 @@ const initializeDatabase = async () => {
     const adminInfo = await createAdminUser();
     result.adminCreated = true;
     result.adminInfo = adminInfo;
-    result.message += `Admin user "${ADMIN_USERNAME}" created.`;
+    result.message += `Admin user "${ADMIN_USERNAME}" created. `;
   } else {
-    result.message += `Admin user "${ADMIN_USERNAME}" already exists.`;
+    result.message += `Admin user "${ADMIN_USERNAME}" already exists. `;
+  }
+  
+  // 4. Default categories for admin
+  const admin = await User.findOne({ username: ADMIN_USERNAME });
+  if (admin) {
+    const categoriesResult = await initializeAdminCategories(admin._id);
+    if (categoriesResult.created) {
+      result.categoriesCreated = true;
+      result.categoriesCount = categoriesResult.count;
+      result.message += `${categoriesResult.count} default categories created for admin.`;
+    } else if (categoriesResult.alreadyExists) {
+      result.message += `Admin categories already exist (${categoriesResult.count} found).`;
+    }
   }
   
   return result;
@@ -212,6 +271,7 @@ const initializeDatabase = async () => {
 
 module.exports = {
   initializeDatabase,
+  initializeAdminCategories,
   checkCollectionExists,
   createUserCollection,
   checkAdminExists,

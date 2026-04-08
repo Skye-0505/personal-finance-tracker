@@ -220,8 +220,8 @@ const formatDate = (dateStr) => {
 const loadProfile = async () => {
   isLoading.value = true
   const result = await getProfile()
-  if (result.success && result.data.data) {
-    user.value = result.data.data
+  if (result.success && result.data) {
+    user.value = result.data
   }
   isLoading.value = false
 }

@@ -139,18 +139,18 @@ const errorMessage = ref('')
 const handleLogin = async () => {
   errorMessage.value = ''
   isLoading.value = true
-  
+
   const result = await login(credentials.value.username, credentials.value.password)
-  
+
   if (!result.success) {
-    errorMessage.value = result.data?.message || 'Login failed'
+    errorMessage.value = result.message || result.data?.message || 'Login failed'
     isLoading.value = false
     return
   }
-  
-  const { token, user } = result.data.data
-  
-  // 根据 Remember Me 选择存储位置
+
+  const { token, user } = result.data
+
+  // Store token based on Remember Me selection
   if (rememberMe.value) {
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
@@ -160,8 +160,8 @@ const handleLogin = async () => {
     sessionStorage.setItem('user', JSON.stringify(user))
     console.log('✅ Saved to sessionStorage (session only)')
   }
-  
-  // 跳转到 dashboard
+
+  // Redirect to dashboard
   router.push('/dashboard')
 }
 </script>

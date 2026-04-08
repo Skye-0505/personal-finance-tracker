@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const Category = require('../models/Category');
 const { generateToken } = require('../utils/jwt');
+const defaultCategories = require('../seed/defaultCategories');
 
 const SALT_ROUNDS = 10;
 
@@ -92,8 +94,28 @@ const register = async (username, password) => {
   });
   
   await newUser.save();
-  
-  // 5. Return user info (without password)
+
+  // 5. Create default categories for the new user
+  try {
+    const userCategories = defaultCategories.map(cat => ({
+      user_id: newUser._id,
+      name: cat.name,
+      type: cat.type,
+      icon: cat.icon,
+      color: cat.color,
+      isDefault: cat.isDefault,
+      created_at: new Date(),
+      updated_at: new Date()
+    }));
+
+    await Category.insertMany(userCategories);
+    console.log(`✅ Created ${userCategories.length} default categories for user: ${username}`);
+  } catch (error) {
+    console.error('Error creating default categories:', error);
+    // Don't fail registration if category creation fails
+  }
+
+  // 6. Return user info (without password)
   const userInfo = {
     _id: newUser._id,
     username: newUser.username,

@@ -20,7 +20,9 @@
 
           <select v-model="filters.category" class="filter-select">
             <option value="">All Categories</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in filterCategories" :key="cat._id" :value="cat.name">
+              {{ cat.name }}
+            </option>
           </select>
 
           <input type="date" v-model="filters.startDate" class="filter-date" placeholder="Start Date">
@@ -62,7 +64,11 @@
               <tr v-for="transaction in paginatedTransactions" :key="transaction._id">
                 <td>{{ formatDate(transaction.transaction_date) }}</td>
                 <td>
-                  <span class="category-badge">
+                  <span v-if="getCategoryByName(transaction.category)" class="category-badge" :style="{ backgroundColor: getCategoryByName(transaction.category)?.color + '20', color: getCategoryByName(transaction.category)?.color }">
+                    <i :class="getCategoryByName(transaction.category)?.icon || 'bi-tag'" v-if="getCategoryByName(transaction.category)?.icon"></i>
+                    {{ transaction.category }}
+                  </span>
+                  <span v-else class="category-badge">
                     {{ transaction.category }}
                   </span>
                 </td>
@@ -86,7 +92,13 @@
         <div class="transactions-card mobile-view">
           <div v-for="transaction in paginatedTransactions" :key="transaction._id" class="transaction-card">
             <div class="card-header">
-              <span class="category">{{ transaction.category }}</span>
+              <span v-if="getCategoryByName(transaction.category)" class="category" :style="{ backgroundColor: getCategoryByName(transaction.category)?.color + '20', color: getCategoryByName(transaction.category)?.color }">
+                <i :class="getCategoryByName(transaction.category)?.icon || 'bi-tag'" v-if="getCategoryByName(transaction.category)?.icon"></i>
+                {{ transaction.category }}
+              </span>
+              <span v-else class="category">
+                {{ transaction.category }}
+              </span>
               <span :class="['amount', transaction.type]">
                 {{ transaction.type === 'income' ? '+' : '-' }} ¥{{ formatNumber(transaction.amount) }}
               </span>
@@ -129,17 +141,17 @@
             <div class="form-group">
               <label>Type</label>
               <div class="type-selector">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   :class="['type-btn', { active: formData.type === 'expense' }]"
-                  @click="formData.type = 'expense'"
+                  @click="setTransactionType('expense')"
                 >
                   <i class="bi bi-arrow-up"></i> Expense
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   :class="['type-btn', { active: formData.type === 'income' }]"
-                  @click="formData.type = 'income'"
+                  @click="setTransactionType('income')"
                 >
                   <i class="bi bi-arrow-down"></i> Income
                 </button>
@@ -162,8 +174,16 @@
               <label>Category</label>
               <select v-model="formData.category" class="form-control" required>
                 <option value="" disabled>Select category</option>
-                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                <option v-for="cat in categories" :key="cat._id" :value="cat.name">
+                  {{ cat.name }}
+                </option>
               </select>
+              <div v-if="getCategoryByName(formData.category)" class="selected-category-preview">
+                <div class="category-icon-small" :style="{ backgroundColor: getCategoryByName(formData.category)?.color }">
+                  <i :class="getCategoryByName(formData.category)?.icon || 'bi-tag'"></i>
+                </div>
+                <span>{{ getCategoryByName(formData.category)?.name }}</span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -200,8 +220,10 @@
 import { ref, computed, onMounted } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction } from '../api/transactions'
+import { getCategories } from '../api/categories'
 
 const transactions = ref([])
+const categoriesList = ref([]) // Store categories from backend
 const isLoading = ref(false)
 const showModal = ref(false)
 const isEditing = ref(false)
@@ -225,7 +247,24 @@ const formData = ref({
   transaction_date: new Date().toISOString().slice(0, 10)
 })
 
-const categories = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Housing', 'Medical', 'Salary', 'Other']
+// Computed property for categories based on type
+const categories = computed(() => {
+  if (formData.value.type === 'income') {
+    return categoriesList.value.filter(cat => cat.type === 'income')
+  } else {
+    return categoriesList.value.filter(cat => cat.type === 'expense')
+  }
+})
+
+// Computed property for filter categories (all categories)
+const filterCategories = computed(() => {
+  return categoriesList.value
+})
+
+// Helper function to get category by name
+const getCategoryByName = (categoryName) => {
+  return categoriesList.value.find(cat => cat.name === categoryName)
+}
 
 const filteredTransactions = computed(() => {
   let result = [...transactions.value]
@@ -281,10 +320,27 @@ const formatNumber = (num) => {
 const loadTransactions = async () => {
   isLoading.value = true
   const result = await getTransactions()
-  if (result.success && result.data.data) {
-    transactions.value = result.data.data
+  if (result.success && result.data) {
+    transactions.value = Array.isArray(result.data) ? result.data : []
   }
   isLoading.value = false
+}
+
+const loadCategories = async () => {
+  try {
+    const result = await getCategories()
+    if (result.success && result.data) {
+      categoriesList.value = result.data
+    }
+  } catch (error) {
+    console.error('Error loading categories:', error)
+  }
+}
+
+const setTransactionType = (type) => {
+  formData.value.type = type
+  // Reset category when type changes
+  formData.value.category = ''
 }
 
 const openAddModal = () => {
@@ -382,6 +438,7 @@ const resetFilters = () => {
 
 onMounted(() => {
   loadTransactions()
+  loadCategories()
 })
 </script>
 
@@ -549,6 +606,13 @@ td.expense {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-badge i {
+  font-size: 14px;
 }
 
 .actions {
@@ -633,6 +697,13 @@ td.expense {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-header .category i {
+  font-size: 14px;
 }
 
 .card-header .amount {
@@ -746,6 +817,29 @@ td.expense {
 .form-control:focus {
   outline: none;
   border-color: #9CAF9A;
+}
+
+.selected-category-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(245, 240, 232, 0.5);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #5C5B5A;
+}
+
+.category-icon-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
 }
 
 .type-selector {

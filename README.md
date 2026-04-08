@@ -1,150 +1,282 @@
-# Personal Finance Tracker - 个人收支记账工具
+# Personal Finance Tracker
+A full-stack project for personal bookkeeping and expense analysis, supporting user registration and login, income/expense record management, category management, visual analytics, and AI-powered spending suggestions.
 
-## 项目简介
-一个基于 Vue.js + Node.js + MongoDB 的全栈个人收支管理应用。
+## Project Introduction
+`Personal Finance Tracker` is a full-stack personal finance management system with a separated frontend and backend. Its core goal is to help users complete the following workflows:
 
-## 技术栈
-- **前端**: Vue 3 + Vite + Bootstrap 5 + Vue Router
-- **后端**: Node.js + Express.js + Mongoose
-- **数据库**: MongoDB
-- **认证**: JWT (JSON Web Token)
+- Record income and expenses (by date, category, description, and amount)
+- Manage accounts by category and maintain custom categories
+- View visual trends on the dashboard and analytics center
+- Analyze transaction behavior from the past 30 days (falling back to full data if none) via AI and receive recommendations
+- Manage username, password, and account status in the profile center
 
-## 功能模块
-- 用户注册/登录
-- 收支记录管理 (CRUD)
-- 分类管理 (CRUD)
-- 仪表盘数据展示
-- 个人中心
+The project uses JWT authentication. All business APIs isolate data by user, ensuring each user can only access their own transactions and category data.
 
-## 项目结构
+## Tech Stack
+### Frontend
+- `Vue 3`
+- `Vite`
+- `Vue Router`
+- `Bootstrap 5` + `Bootstrap Icons`
+- `Chart.js`
+- `ECharts`
+- `Pinia`
 
+### Backend
+- `Node.js`
+- `Express`
+- `Mongoose`
+- `JWT` (`jsonwebtoken`)
+- `bcrypt`
+- `cors` / `dotenv` / `axios`
+
+### Database
+- `MongoDB`
+
+## Modules & Features
+### 1) Authentication Module
+- User registration: creates an account and automatically initializes default categories for the user
+- User login: returns `token + user` information
+- API authentication based on `Authorization: Bearer <token>`
+
+### 2) Income & Expense Management Module
+- CRUD operations for transaction records (create / list / detail / update / delete)
+- Filtering by type, category, start date, and end date
+- Mobile card view and desktop table view support
+
+### 3) Category Management Module
+- Category CRUD (default and custom categories)
+- Supports category icons, colors, and income/expense types
+- Validation before category deletion
+
+### 4) Dashboard Module
+- Statistics for total income, total expense, balance, and transaction count
+- Expense category distribution chart (pie chart)
+- Income and expense trend chart for the past 6 months (line chart)
+- Recent transaction list + quick access links
+
+### 5) Analytics Center Module
+- Annual spending heatmap
+- Period comparison (current month vs last month / current quarter vs last quarter / current year vs last year)
+- Weekly spending pattern analysis
+- AI report generation (text suggestions)
+
+### 6) Profile Module
+- View and update username
+- Change password
+- Account deactivation (admin accounts cannot be deactivated)
+
+## Quick Start
+### Environment Requirements
+- `Node.js >= 18` (LTS version recommended)
+- `MongoDB` (local or cloud)
+- `npm`
+
+### 1) Configure Backend Environment Variables
+At minimum, configure the following variables in `backend/.env`:
+
+```env
+PORT=3000
+MONGODB_URI=mongodb://127.0.0.1:27017/personal_finance_tracker
+JWT_SECRET=replace_with_your_secret
+
+# AI Analysis
+AI_API_KEY=your_api_key
+AI_BASE_URL=your_ai_base_url
+AI_MODEL_NAME=your_model_name
+AI_API_VERSION=2024-02-15-preview
 ```
-personal-finance-tracker/
-├── frontend/                    # 前端项目 (Vue 3)
-│   ├── src/
-│   │   ├── api/                # API 接口封装
-│   │   │   ├── auth.js         # 认证接口
-│   │   │   ├── transactions.js # 交易接口
-│   │   │   └── categories.js   # 分类接口
-│   │   ├── assets/             # 静态资源
-│   │   │   └── css/            # 样式文件
-│   │   ├── components/         # 公共组件
-│   │   │   ├── Navbar.vue      # 导航栏
-│   │   │   ├── Sidebar.vue     # 侧边栏
-│   │   │   ├── TransactionForm.vue    # 交易表单
-│   │   │   ├── TransactionList.vue    # 交易列表
-│   │   │   └── CategoryForm.vue      # 分类表单
-│   │   ├── router/             # 路由配置
-│   │   │   └── index.js
-│   │   ├── store/              # 状态管理 (可选)
-│   │   ├── utils/              # 工具函数
-│   │   │   └── auth.js         # 认证工具
-│   │   ├── views/              # 页面组件
-│   │   │   ├── Login.vue       # 登录页
-│   │   │   ├── Register.vue    # 注册页
-│   │   │   ├── Dashboard.vue   # 仪表盘
-│   │   │   ├── Transactions.vue # 交易管理页
-│   │   │   ├── Categories.vue   # 分类管理页
-│   │   │   └── Profile.vue     # 个人中心
-│   │   ├── App.vue             # 根组件
-│   │   └── main.js             # 入口文件
-│   ├── public/                 # 公共资源
-│   ├── index.html              # HTML 模板
-│   ├── vite.config.js          # Vite 配置
-│   └── package.json            # 依赖配置
-│
-├── backend/                    # 后端项目 (Node.js + Express)
-│   ├── src/
-│   │   ├── config/             # 配置文件
-│   │   │   └── db.js           # 数据库配置
-│   │   ├── controllers/        # 控制器
-│   │   │   ├── authController.js
-│   │   │   ├── transactionController.js
-│   │   │   └── categoryController.js
-│   │   ├── middleware/         # 中间件
-│   │   │   ├── auth.js         # 认证中间件
-│   │   │   └── errorHandler.js # 错误处理
-│   │   ├── models/             # 数据模型
-│   │   │   ├── User.js         # 用户模型
-│   │   │   ├── Transaction.js  # 交易模型
-│   │   │   └── Category.js     # 分类模型
-│   │   ├── routes/             # 路由定义
-│   │   │   ├── auth.js
-│   │   │   ├── transactions.js
-│   │   │   └── categories.js
-│   │   ├── utils/              # 工具函数
-│   │   │   └── validators.js   # 数据验证
-│   │   └── server.js           # 服务器入口
-│   ├── logs/                   # 日志目录
-│   ├── tests/                  # 测试文件
-│   │   ├── auth.test.js
-│   │   ├── transactions.test.js
-│   │   └── categories.test.js
-│   ├── .env.example            # 环境变量示例
-│   └── package.json            # 依赖配置
-│
-├── docs/                       # 项目文档
-├── .gitignore                  # Git 忽略文件
-└── README.md                   # 项目说明
-```
 
-## 快速开始
-
-### 前置要求
-- Node.js >= 16.x
-- MongoDB >= 4.x
-- npm 或 yarn
-
-### 后端启动
+### 2) Start Backend
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-### 前端启动
+Default backend URL: `http://localhost:3000`
+
+### 3) Start Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## API 接口说明
+Default frontend URL: `http://localhost:5173`
 
-### 认证接口
-- `POST /api/auth/register` - 用户注册
-- `POST /api/auth/login` - 用户登录
+### 4) Data Initialization (automatic, no manual action needed)
+After the backend starts, the project automatically attempts database initialization (creating collections, admin account, and admin default categories).
 
-### 交易接口
-- `GET /api/transactions` - 获取交易列表
-- `POST /api/transactions` - 创建交易
-- `GET /api/transactions/:id` - 获取单个交易
-- `PUT /api/transactions/:id` - 更新交易
-- `DELETE /api/transactions/:id` - 删除交易
+## Project Structure
+```text
+personal-finance-tracker/
+├── backend/
+│   ├── app.js                     # Express entry, mounts routes and middleware
+│   ├── bin/www                    # Startup script (default port 3000)
+│   ├── config/
+│   │   └── database.js            # MongoDB connection
+│   ├── controllers/               # Controller layer
+│   ├── middlewares/
+│   │   └── auth.js                # JWT authentication middleware
+│   ├── models/                    # Mongoose models
+│   │   ├── User.js
+│   │   ├── Transaction.js
+│   │   └── Category.js
+│   ├── routes/                    # API routes
+│   │   ├── index.js               # /api/init
+│   │   ├── auth.js
+│   │   ├── users.js
+│   │   ├── transactions.js
+│   │   ├── categories.js
+│   │   └── ai.js
+│   ├── seed/
+│   │   ├── defaultCategories.js   # Default category definitions
+│   │   └── initCategories.js      # Initialization script
+│   ├── services/                  # Business service layer
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── api/                   # Frontend API wrappers
+│   │   ├── components/            # Shared components (e.g. NavBar)
+│   │   ├── router/
+│   │   │   └── index.js           # Routes + login guard
+│   │   ├── views/                 # Pages
+│   │   │   ├── Login.vue / Register.vue
+│   │   │   ├── Dashboard.vue
+│   │   │   ├── Analytics.vue
+│   │   │   ├── Transactions.vue
+│   │   │   ├── Categories.vue
+│   │   │   ├── CategoryDetail.vue
+│   │   │   └── Profile.vue
+│   │   └── main.js
+│   ├── vite.config.js
+│   └── package.json
+├── DEFAULT_CATEGORIES.md          # Predefined category documentation
+└── README.md
+```
 
-### 分类接口
-- `GET /api/categories` - 获取分类列表
-- `POST /api/categories` - 创建分类
-- `GET /api/categories/:id` - 获取单个分类
-- `PUT /api/categories/:id` - 更新分类
-- `DELETE /api/categories/:id` - 删除分类
+## Database Design
+Built on MongoDB + Mongoose, with three core collections:
 
-## 作业要求对照
+### `users`
+| Field | Type | Description |
+|---|---|---|
+| `username` | String | Unique username |
+| `password_hash` | String | Hashed password |
+| `is_active` | Boolean | Whether the account is active |
+| `created_at` | Date | Creation time |
+| `updated_at` | Date | Update time |
 
-| 要求项 | 状态 | 说明 |
-|--------|------|------|
-| 前端: Vue.js + Bootstrap | ✅ | Vue 3 + Bootstrap 5 |
-| 后端: Node.js (Express.js) | ✅ | Express.js 框架 |
-| 数据库: MongoDB | ✅ | 使用 Mongoose |
-| 两个相关数据集合 | ✅ | Transaction + Category (关联 User) |
-| CRUD 操作 | ✅ | 完整增删改查 |
-| Token-based 认证 | ✅ | JWT 实现 |
-| 响应式设计 | 🚧 | Bootstrap 5 响应式 |
-| 数据可视化 | 🚧 | 待实现 |
-| AI 消费分析 | 🚧 | 待实现 |
+### `categories`
+| Field | Type | Description |
+|---|---|---|
+| `user_id` | ObjectId | Belongs to user |
+| `name` | String | Category name |
+| `type` | String | `income` / `expense` |
+| `icon` | String | Bootstrap Icon class name |
+| `color` | String | Category color |
+| `isDefault` | Boolean | Whether it is a default category |
+| `created_at` | Date | Creation time |
+| `updated_at` | Date | Update time |
 
-## 开发团队
-- 2人小组项目
+### `transactions`
+| Field | Type | Description |
+|---|---|---|
+| `user_id` | ObjectId | Belongs to user |
+| `type` | String | `income` / `expense` |
+| `amount` | Number | Amount, `> 0` |
+| `category` | String | Category name (string) |
+| `description` | String | Description |
+| `transaction_date` | Date | Transaction date |
+| `created_at` | Date | Creation time |
+| `updated_at` | Date | Update time |
 
-## 更新日志
-- 2026-03-20: 项目初始化，创建目录结构
+### Relationship Notes
+- `users (1) -> (N) categories`
+- `users (1) -> (N) transactions`
+- `transactions.category` stores the category name as a string (not a foreign key)
+
+## API Documentation
+Base URL: `http://localhost:3000/api`
+
+### Authentication
+- Include in request headers after login: `Authorization: Bearer <token>`
+- All business APIs require authentication except `/auth/*` and `/init`
+
+### 1) System Initialization
+- `POST /init`: Initializes collections, admin account, and admin default categories
+
+### 2) Authentication APIs
+- `POST /auth/register`: User registration
+- `POST /auth/login`: User login
+
+### 3) User APIs
+- `GET /users/profile`: Get personal information
+- `PUT /users/profile`: Update username
+- `PUT /users/password`: Change password
+- `DELETE /users/account`: Deactivate account
+
+### 4) Transaction APIs
+- `GET /transactions`: List transactions (supports query params: `type`, `category`, `startDate`, `endDate`)
+- `GET /transactions/:id`: Transaction details
+- `POST /transactions`: Create transaction
+- `PUT /transactions/:id`: Update transaction
+- `DELETE /transactions/:id`: Delete transaction
+
+### 5) Category APIs
+- `POST /categories/init`: Initialize default categories for current user
+- `GET /categories`: List categories
+- `GET /categories/:id`: Category details
+- `POST /categories`: Create category
+- `PUT /categories/:id`: Update category
+- `DELETE /categories/:id`: Delete category
+
+### 6) AI APIs
+- `POST /ai/analyze`: Generate AI spending analysis
+
+## Predefined Category List
+The system includes **25 built-in categories** (18 expense + 7 income), automatically initialized for new users upon registration.
+
+### Expense Categories (18)
+- Food
+- Transportation
+- Shopping
+- Entertainment
+- Housing
+- Utilities
+- Communication
+- Healthcare
+- Education
+- Travel
+- Social
+- Fitness
+- Pets
+- Clothing
+- Beauty
+- Electronics
+- Home
+- Other
+
+### Income Categories (7)
+- Salary
+- Bonus
+- Investment
+- Gift
+- Refund
+- Reimbursement
+- Other Income
+
+## Usage Instructions
+### Recommended First-Time Workflow
+1. Register and log in
+2. Go to `Transactions` to add several income/expense records
+3. Go to `Categories` to review default categories and add custom ones as needed
+4. View overview and charts on the `Dashboard`
+5. Generate detailed analysis and AI reports in `Analytics`
+6. Manage username, password, and account status in `Profile`
+
+### Common Notes
+- If the AI analysis API fails, first verify that backend AI environment variables are correctly configured
+- Ensure no related transactions exist before deleting a category
+- Token is stored in browser `localStorage/sessionStorage` and cleared on logout

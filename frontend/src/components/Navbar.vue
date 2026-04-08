@@ -78,6 +78,7 @@ const isScrolled = ref(false)
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: 'bi bi-speedometer2' },
+  { path: '/analytics', label: 'Analytics', icon: 'bi bi-bar-chart' },
   { path: '/transactions', label: 'Transactions', icon: 'bi bi-receipt' },
   { path: '/categories', label: 'Categories', icon: 'bi bi-tags' },
   { path: '/profile', label: 'Profile', icon: 'bi bi-person-circle' }

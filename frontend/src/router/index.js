@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/analytics',
+      name: 'analytics',
+      component: () => import('../views/Analytics.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/transactions',
       name: 'transactions',
       component: () => import('../views/Transactions.vue'),
@@ -35,6 +41,12 @@ const router = createRouter({
       path: '/categories',
       name: 'categories',
       component: () => import('../views/Categories.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/categories/:id',
+      name: 'categoryDetail',
+      component: () => import('../views/CategoryDetail.vue'),
       meta: { requiresAuth: true }
     },
     {
